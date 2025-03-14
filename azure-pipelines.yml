@@ -18,22 +18,31 @@ steps:
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
 
+# Copy files to artifact staging directory
 - task: CopyFiles@2
   inputs:
+    sourceFolder: '$(System.DefaultWorkingDirectory)' # Adjust this if needed
     targetFolder: '$(Build.ArtifactStagingDirectory)'    
 
+# Publish build artifacts
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: drop'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
 
-# New Azure File Copy step
+# Check if the .zip file exists in the artifact directory
+- script: |
+    echo "Checking files in artifact directory:"
+    dir "$(Build.ArtifactStagingDirectory)"
+  displayName: 'Check Artifact Directory'
+
+# Upload artifact to Azure Blob Storage
 - task: AzureFileCopy@6
   displayName: 'Upload Artifact to Azure Blob'
   inputs:
-    SourcePath: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    azureSubscription: 'Nova' # Service connection
+    SourcePath: '$(Build.ArtifactStagingDirectory)/*.zip' # Using wildcard to avoid filename mismatch
+    azureSubscription: 'Nova' # Service connection name
     Destination: 'AzureBlob'
     storage: 'kamdevopsstr' # Storage account name
     ContainerName: 'kamcontainer'
-    AdditionalArguments: '--log-level=DEBUG' # Optional: For more logs
+    AdditionalArguments: '--log-level=DEBUG' # Optional: For detailed logs

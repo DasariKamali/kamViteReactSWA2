@@ -4,10 +4,10 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
+  - main
 
 pool:
-  name : SelfHostedPool
+  name: SelfHostedPool
 
 steps:
 - script: echo Hello, world!
@@ -25,4 +25,15 @@ steps:
 - task: PublishBuildArtifacts@1    
   displayName: 'Publish Artifact: drop'
   inputs:
-    PathtoPublish: '$(build.artifactstagingdirectory)'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+
+# New Azure File Copy step
+- task: AzureFileCopy@6
+  displayName: 'Upload Artifact to Azure Blob'
+  inputs:
+    SourcePath: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    azureSubscription: 'Nova' # Service connection
+    Destination: 'AzureBlob'
+    storage: 'kamdevopsstr' # Storage account name
+    ContainerName: 'kamcontainer'
+    AdditionalArguments: '--log-level=DEBUG' # Optional: For more logs
